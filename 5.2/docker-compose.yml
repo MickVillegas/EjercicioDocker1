@@ -1,0 +1,90 @@
+version: '3.4'
+
+services:
+  mysql:
+    image: mysql:9.1
+    ports: 
+      - 3306:3306
+    environment: 
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes: 
+      - mysql_data:/var/lib/mysql
+    networks: 
+      - backend-network
+    restart: always
+  
+  phpmyadmin:
+    image: phpmyadmin:5.2.1
+    ports:
+      - 8080:80
+    environment: 
+      - PMA_ARBITRARY=1
+    networks: 
+      - backend-network
+      - frontend-network
+    restart: always
+    depends_on: 
+      - mysql
+
+#cosas que he visto 
+
+ #  mariadb:
+       volumes:
+-      - 'mariadb_data:/bitnami/mariadb'
++      - /path/to/mariadb-persistence:/bitnami/mariadb
+   ...
+   wordpress:
+     ...
+     volumes:
+-      - 'wordpress_data:/bitnami/wordpress'
++      - /path/to/wordpress-persistence:/bitnami/wordpress
+   ...
+-volumes:
+-  mariadb_data:
+-    driver: local
+-  wordpress_data:
+-    driver: local
+
+--env ALLOW_EMPTY_PASSWORD=yes \
+  --env MARIADB_USER=bn_wordpress \
+  --env MARIADB_PASSWORD=bitnami \
+  --env MARIADB_DATABASE=bitnami_wordpress \
+  --network wordpress-network \
+  --volume /path/to/mariadb-persistence:/bitnami/mariadb \
+  bitnami/mariadb:latest
+
+  wordpress:
+    image: bitnami/wordpress:latest
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: exampleuser
+      WORDPRESS_DB_PASSWORD: examplepass
+      WORDPRESS_DB_NAME: exampledb
+    volumes:
+      - wordpress:/var/www/html
+
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    environment:
+      #DOMAINS: "$DOMAIN -> http://prestashop:80"
+      STAGE: 'production' 
+    networks:
+      - frontend-network
+
+volumes:
+  mysql_data:
+  prestashop_data:
+
+networks: 
+  backend-network:
+  frontend-network:
