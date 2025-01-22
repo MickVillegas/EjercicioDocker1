@@ -30,44 +30,20 @@ services:
       - mysql
 
 #cosas que he visto 
-
- #  mariadb:
-       volumes:
--      - 'mariadb_data:/bitnami/mariadb'
-+      - /path/to/mariadb-persistence:/bitnami/mariadb
-   ...
-   wordpress:
-     ...
-     volumes:
--      - 'wordpress_data:/bitnami/wordpress'
-+      - /path/to/wordpress-persistence:/bitnami/wordpress
-   ...
--volumes:
--  mariadb_data:
--    driver: local
--  wordpress_data:
--    driver: local
-
---env ALLOW_EMPTY_PASSWORD=yes \
-  --env MARIADB_USER=bn_wordpress \
-  --env MARIADB_PASSWORD=bitnami \
-  --env MARIADB_DATABASE=bitnami_wordpress \
-  --network wordpress-network \
-  --volume /path/to/mariadb-persistence:/bitnami/mariadb \
-  bitnami/mariadb:latest
-
   wordpress:
     image: bitnami/wordpress:latest
-    restart: always
     ports:
       - 8080:80
     environment:
-      WORDPRESS_DB_HOST: db
-      WORDPRESS_DB_USER: exampleuser
-      WORDPRESS_DB_PASSWORD: examplepass
-      WORDPRESS_DB_NAME: exampledb
+      - WORDPRESS_DB_HOST=$WORDPRESS_DB_HOST
+      - WORDPRESS_DB_USER=$WORDPRESS_DB_USER
+      - WORDPRESS_DB_PASSWORD=$WORDPRESS_DB_PASSWORD
+      - WORDPRESS_DB_NAME=$WORDPRESS_DB_NAME
     volumes:
       - wordpress:/var/www/html
+    depends_on:
+      - mysql
+    restart: always
 
   https-portal:
     image: steveltn/https-portal:1
@@ -76,7 +52,7 @@ services:
       - 443:443
     restart: always
     environment:
-      #DOMAINS: "$DOMAIN -> http://prestashop:80"
+      #DOMAINS: "$DOMAIN -> http://bitnami/wordpress:80"
       STAGE: 'production' 
     networks:
       - frontend-network
