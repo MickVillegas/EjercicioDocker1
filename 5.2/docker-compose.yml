@@ -1,7 +1,7 @@
 version: '3.4'
 
 services:
-  mysql:
+  mariadb:
     image: mysql:9.1
     ports: 
       - 3306:3306
@@ -27,13 +27,13 @@ services:
       - frontend-network
     restart: always
     depends_on: 
-      - mysql
+      - mariadb
 
 #cosas que he visto 
   wordpress:
-    image: bitnami/wordpress:latest
+    image: bitnami/wordpress:6.7.1
     ports:
-      - 8080:80
+      - 80:8080
     environment:
       - WORDPRESS_DB_HOST=$WORDPRESS_DB_HOST
       - WORDPRESS_DB_USER=$WORDPRESS_DB_USER
@@ -42,7 +42,7 @@ services:
     volumes:
       - wordpress:/var/www/html
     depends_on:
-      - mysql
+      - mariadb
     restart: always
 
   https-portal:
@@ -52,14 +52,14 @@ services:
       - 443:443
     restart: always
     environment:
-      #DOMAINS: "$DOMAIN -> http://bitnami/wordpress:80"
+      DOMAINS: "$DOMAIN -> http://wordpress/wordpress:80"
       STAGE: 'production' 
     networks:
       - frontend-network
 
 volumes:
   mysql_data:
-  prestashop_data:
+  wordpress:
 
 networks: 
   backend-network:
