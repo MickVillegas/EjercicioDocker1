@@ -1,15 +1,15 @@
 version: '3.4'
 
 services:
-  mariadb:
-    image: mysql:9.1
+  mysql:
+    image: mysql:9.0
     ports: 
       - 3306:3306
     environment: 
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
     volumes: 
       - mysql_data:/var/lib/mysql
     networks: 
@@ -27,35 +27,38 @@ services:
       - frontend-network
     restart: always
     depends_on: 
-      - mariadb
+      - mysql
 
 #cosas que he visto 
   wordpress:
     image: bitnami/wordpress:6.7.1
     ports:
-      - 80:8080
+      - 80:8080 #lo quitas despues del https
     environment:
-      - WORDPRESS_DB_HOST=$WORDPRESS_DB_HOST
-      - WORDPRESS_DB_USER=$WORDPRESS_DB_USER
-      - WORDPRESS_DB_PASSWORD=$WORDPRESS_DB_PASSWORD
-      - WORDPRESS_DB_NAME=$WORDPRESS_DB_NAME
+      - WORDPRESS_DATABASE_HOST=mysql
+      - WORDPRESS_DATABASE_USER=$MYSQL_USER
+      - WORDPRESS_DATABASE_PASSWORD=$MYSQL_PASSWORD
+      - WORDPRESS_DATABASE_NAME=$MYSQL_DATABASE
     volumes:
       - wordpress:/var/www/html
     depends_on:
-      - mariadb
+      - mysql
+    networks: 
+      - backend-network
+      - frontend-network
     restart: always
 
-  https-portal:
-    image: steveltn/https-portal:1
-    ports:
-      - 80:80
-      - 443:443
-    restart: always
-    environment:
-      DOMAINS: "$DOMAIN -> http://wordpress/wordpress:80"
-      STAGE: 'production' 
-    networks:
-      - frontend-network
+  #https-portal:
+   # image: steveltn/https-portal:1
+    #ports:
+    #  - 80:80
+    #  - 443:443
+    #restart: always
+    #environment:
+    #  DOMAINS: "$DOMAIN -> http:///wordpress:8080"
+     # STAGE: 'production' 
+    #networks:
+    #  - frontend-network
 
 volumes:
   mysql_data:
