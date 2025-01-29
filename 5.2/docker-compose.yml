@@ -32,8 +32,8 @@ services:
 #cosas que he visto 
   wordpress:
     image: bitnami/wordpress:6.7.1
-    ports:
-      - 80:8080 #lo quitas despues del https
+    #ports:
+      #- 80:8080 #lo quitas despues del https
     environment:
       - WORDPRESS_DATABASE_HOST=mysql
       - WORDPRESS_DATABASE_USER=$MYSQL_USER
@@ -48,17 +48,17 @@ services:
       - frontend-network
     restart: always
 
-  #https-portal:
-   # image: steveltn/https-portal:1
-    #ports:
-    #  - 80:80
-    #  - 443:443
-    #restart: always
-    #environment:
-    #  DOMAINS: "$DOMAIN -> http:///wordpress:8080"
-     # STAGE: 'production' 
-    #networks:
-    #  - frontend-network
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    environment:
+      DOMAINS: "$DOMAIN -> http://wordpress:8080"
+      STAGE: 'production' 
+    networks:
+      - frontend-network
 
 volumes:
   mysql_data:
@@ -67,3 +67,4 @@ volumes:
 networks: 
   backend-network:
   frontend-network:
+
