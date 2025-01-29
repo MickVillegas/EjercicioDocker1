@@ -142,6 +142,31 @@ networks:
 ```
 Vamos a hacer un docker compose up -d para ver si funciona bien (levantamos el contenedor en segundo plano)
 
+Una vez hecho buscamos en nuestro buscador nuestra ip sin https, entonces nos encontraremos en nuestro wordpress 
+
+![imagen](./img/word.png)
+
+## http
+Ahora configuraremos el servicio http, lo haremos de la siguiente manera  
+Primero quitaremos el puerto en el servicio wordpress y despues añadiremos lo siguiente en el servicio http  
+
+```
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    environment:
+      DOMAINS: "$DOMAIN -> http:///wordpress:8080"
+      STAGE: 'production' 
+    networks:
+      - frontend-network
+```
+
+la version de la imagen es teveltn/https-portal:1, sus puertos serán 80:80 443:443 se reiniciara automaticamente siempre, sus variables de entorno será DOMAINS: "$DOMAIN -> http:///wordpress:8080"donde indicamos nuestro dominio, aquí he usado mi nombre de dominio usando la variable del .env y las redes con el que se conecta es el frontend, de esta forma el archivo se verá así
+
+
 ```
 version: '3.4'
 services:
@@ -173,7 +198,6 @@ services:
     depends_on: 
       - mysql
 
-#cosas que he visto 
   wordpress:
     image: bitnami/wordpress:6.7.1
     ports:
@@ -212,3 +236,6 @@ networks:
   backend-network:
   frontend-network:
 ```
+ahora si buscamos nuestro nombre de dominio el resultado es el siguiente  
+
+![imagen](./img/w.png)
