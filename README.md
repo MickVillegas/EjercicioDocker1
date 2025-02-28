@@ -1,4 +1,308 @@
-# Despliegue de wordpress en Docker
+# Despliegue de prestashop y wordpress en Docker
+
+En este readme están documentados tanto el ejercicio de prestashop como el de wordpress.  
+
+Los archivos docker-compose que he creado siguen un mismo patron donde:
+- Escrivo la version con version: '3.4'
+- Los servicios de las imagenes dockerhub que se van a usar bajo la etiqueta services
+- Las redes que usan los servicios con networks
+- Los nombres de los volumenes que he creado en volumes 
+
+## Ejercicio Prestashop  
+
+En este ejercicio haremos el despliegue de prestashop con el uso de un docker-compose.yml, para ello debemos hacer uso de las imagenes msql, https portal y phpMyAdmin  
+
+### mysql  
+
+Este para este servicio usaremos la imagen de mysql y usarwemos la ultima version, pero en vez de poner "letest" para usar la ultima version directamente escribiremos el numero de versión, que, a fecha en la que se creo la imagen, usaré la version 9.1, asique usaremos la instruccion 
+```image: mysql:9.1``` para que docker sepa qué version de la imagen usar y que lo descarge.  
+También necesitamos poner qué puertos escucha para mantener su conexion con el host el cual serán los puertos  3306:3306, el puerto de la derecha es la que escucha el contenedor es el puerto de la izquierda la del host, para escribirlo nuestro de nuestro archivo necesitaremos escribir la instruccion  
+
+```
+    ports: 
+      - 3306:3306
+```
+
+Mysql necesitará que escribamos cual es el nombre de la base de datos, un usuario, una contraseña y otra contraseña para rot, en nuestro archivo tendremos que hacer uso de la etiqueta environment para pasarle los datos que necesita la base de datos para su creación:  
+
+```
+    environment: 
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+```
+
+Aquí he hecho uso de variables de entorno que los tengo guardadas en un archivo .env, para pasarle lñas variables como se muestra se puede poner con el simbolo del dolar y el nombre de la vasiable entre llaves, pero tambien se puede pasarle unstring con la contraseña, usuario, nombre de la base de datos... Pero para mayor seguridad lo he hecho así  
+
+En docker compose podemos asignar un lugar para que los datos se guarden de forma permanente en un directorio del host, para ello se usa la etiqueta volumes donde se le pasa el nombre del volumen " mysql_data" y el directorio deonde se guardan los datos que mysql los debe guardar en el directorio /var/lib/mysql
+
+```
+    volumes: 
+      - mysql_data:/var/lib/mysql
+```
+
+Para decirle qué puertos escucha mysql usamos la etiqueta networks, mysql escuhará la red backend, con lo que la instruccion se verá de la siguiente manera
+
+```
+    networks: 
+      - backend-network
+```
+
+Por ultimo le indicaremos que se reinicie el servicio automaticamente siempre con la instrucción:  
+
+```
+restart: always
+```
+
+Por lo que el servicio en mysql en nuestro archivo se debe ver de la siguiente manera:  
+
+```
+  mysql:
+    image: mysql:9.1
+    #command: --default-authentication-plugin=mysql_native_password
+    ports: 
+      - 3306:3306
+    environment: 
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes: 
+      - mysql_data:/var/lib/mysql
+    networks: 
+      - backend-network
+    restart: always
+```
+
+### phpMyAdmin  
+
+Pasra configurar el servicio haremos lo siguiente  
+La imagen que usaré, a fecha en la que hice este archivo, será la ultima que es la version 5.2.1 de phpMyAdmin y usaré la etiqueta image para decirle a docker qué versio ntiene que usar  
+
+```
+image: phpmyadmin:5.2.1
+```
+
+phpMy admin se comunicará con el host con los puertos 8080:80  
+
+```
+    ports:
+      - 8080:80
+```
+
+Además este servicio está conectado a dos redes, la red frontend y la red backend  
+
+```
+    networks: 
+      - backend-network
+      - frontend-network
+```
+
+Y le decimos que siempre se reinicie de forma automatica
+
+```
+restart: always
+```
+
+phpMyAdmin depende del funcionameiento de mysql, para decirle a docker que este servicio depende del correcto funcionamiento del servicio mysql para funcionar usaremos la etiqueta depends_on y el nombre del servicio:   
+
+```
+    depends_on: 
+      - mysql
+```
+
+El servicio de phpMyAdmin devbería verse de la siguiente manera:  
+
+```
+  phpmyadmin:
+    image: phpmyadmin:5.2.1
+    ports:
+      - 8080:80
+    environment: 
+      - PMA_ARBITRARY=1
+    networks: 
+      - backend-network
+      - frontend-network
+    restart: always
+    depends_on: 
+      - mysql
+```
+
+### Prestashop  
+
+Para este servicio hemos usado la version prestashop/prestashop:8 de la imagen de prestashon:  
+
+```
+image: prestashop/prestashop:8
+```
+
+Prestashop necesita saber qué servicio de base de datos es el que estamos usando, o el server de base de datos, en este caso estamos usando mysql, para que docker lo interprete lo especificaremos en la etiqueta enviorements y esta vez he pasado el dato por string  
+
+```
+    environment: 
+      - DB_SERVER=mysql
+```
+
+Además haremos los datos permanentes en el directorio /var/www/html
+
+```
+    volumes:
+      - prestashop_data:/var/www/html
+```
+
+Prestashop se copnecta en la red frontent y backend  
+
+```
+    networks: 
+      - backend-network
+      - frontend-network
+```
+
+Por ultimo le decimos que el servicio depende del funcionamiento de mysql para que funcione y que se reinicia siempre  
+
+```
+    restart: always
+    depends_on: 
+      - mysql
+```
+
+Por lo que la configuraciondel servicio de prestashop se debe ver de la siguiente manera  
+
+```
+  prestashop:
+    image: prestashop/prestashop:8
+    environment: 
+      - DB_SERVER=mysql
+    volumes:
+      - prestashop_data:/var/www/html
+    networks: 
+      - backend-network
+      - frontend-network
+    restart: always
+    depends_on: 
+      - mysql
+````
+
+### Httpos portal
+
+Para este servicio usaremos la imagen steveltn/https-portal:1, además escuchará con será los puertos 80:80 y 443:443, el servicio siempre se reiniciará, en enviorements necesitaremos escribir cual es el dominio de nuestro prestashop, el cual será http://prestashop:80", este se guardará en la etiqueta domains al que tambien se le pasa nuestra variable de entorno domains  
+
+```
+DOMAINS: "$DOMAIN -> http://prestashop:80"
+```
+la variable $DOMAIN -> será reemplazada por el dominio, ademñas http://prestashop:80 es para que el dominio apunte al servicio dfe nuestro prestashop corriendo en el puerto 80.
+Además pondremos ``` STAGE: 'production'``` indica que el entorno se va a ejecutar etá configurado como produccion
+
+Por ultimo le decimos que se conecta a la red frontend.
+Nuestro sdervicio de https portal se debería verse de la siguiente manera  
+
+```
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    environment:
+      DOMAINS: "$DOMAIN -> http://prestashop:80"
+      STAGE: 'production' # Don't use production until staging works
+      # FORCE_RENEW: 'true'
+    networks:
+      - frontend-network
+```
+
+Al final del archivo debemos poner aquellos servicios que usan volumenes para guardar sus datros y las redes con los que nlos servicios se conectan, estas instrucciones deben ser las siguientes
+
+```
+volumes:
+  mysql_data:
+  prestashop_data:
+
+networks: 
+  backend-network:
+  frontend-network:
+```
+
+El resultado fianl de todo nuestro archivo docker compose tiene que ser el siguiente  
+
+```
+version: '3.4'
+
+services:
+  mysql:
+    image: mysql:9.1
+    #command: --default-authentication-plugin=mysql_native_password
+    ports: 
+      - 3306:3306
+    environment: 
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes: 
+      - mysql_data:/var/lib/mysql
+    networks: 
+      - backend-network
+    restart: always
+  
+  phpmyadmin:
+    image: phpmyadmin:5.2.1
+    ports:
+      - 8080:80
+    environment: 
+      - PMA_ARBITRARY=1
+    networks: 
+      - backend-network
+      - frontend-network
+    restart: always
+    depends_on: 
+      - mysql
+
+  prestashop:
+    image: prestashop/prestashop:8
+    environment: 
+      - DB_SERVER=mysql
+    volumes:
+      - prestashop_data:/var/www/html
+    networks: 
+      - backend-network
+      - frontend-network
+    restart: always
+    depends_on: 
+      - mysql
+
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    environment:
+      DOMAINS: "$DOMAIN -> http://prestashop:80"
+      STAGE: 'production' # Don't use production until staging works
+      # FORCE_RENEW: 'true'
+    networks:
+      - frontend-network
+
+volumes:
+  mysql_data:
+  prestashop_data:
+
+networks: 
+  backend-network:
+  frontend-network:
+```
+
+
+
+
+
+
+
+
+
+## Ejercicio Workpress
 
 En este ejercicio haremos uso de los servicios mysql, phpadmin, http y wordpress que iran bajo la palabra service, bayamos primero con mysql  
 
