@@ -8,6 +8,13 @@ Los archivos docker-compose que he creado siguen un mismo patron donde:
 - Las redes que usan los servicios con networks
 - Los nombres de los volumenes que he creado en volumes 
 
+Para buscar la imagenes he visitado la página de dockerhub, he buscado el nombre de la imagen y he seguido las instrucciones proporcionadas en la descripcion de las imagenes, las siguientes imagenes uso como ejemplo una busqueda de la imagen de prestashop
+
+![imagen](./img/z1.png)
+![imagen](./img/z2.png)
+![imagen](./img/z3.png)
+![imagen](./img/z4.png)
+
 ## Ejercicio Prestashop  
 
 En este ejercicio haremos el despliegue de prestashop con el uso de un docker-compose.yml, para ello debemos hacer uso de las imagenes msql, https portal y phpMyAdmin  
