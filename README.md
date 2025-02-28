@@ -19,10 +19,37 @@ Para buscar la imagenes he visitado la página de dockerhub, he buscado el nombr
 
 En este ejercicio haremos el despliegue de prestashop con el uso de un docker-compose.yml, para ello debemos hacer uso de las imagenes msql, https portal y phpMyAdmin  
 
+Además uso dos arvhos: 
+- El archivo yml
+- El archivo .env
+
+En el archivo env se encuentran las variables de entorno que usaré en este ejercicio  
+
+Estas variables serán usadas para:
+- La contraseña root de la base de datos
+- El nombre de la base de datos
+- El nombre de usuario de la base de datos
+- La contraseña del usuario de la base de datos
+- El dominio del sitio web
+
+```
+MYSQL_ROOT_PASSWORD=prestaroot
+MYSQL_DATABASE=prestabase
+MYSQL_USER=prestauser
+MYSQL_PASSWORD=prestapass
+DOMAIN=practicadocker.zapto.org
+```
+
 ### mysql  
 
 Este para este servicio usaremos la imagen de mysql y usarwemos la ultima version, pero en vez de poner "letest" para usar la ultima version directamente escribiremos el numero de versión, que, a fecha en la que se creo la imagen, usaré la version 9.1, asique usaremos la instruccion 
 ```image: mysql:9.1``` para que docker sepa qué version de la imagen usar y que lo descarge.  
+
+Para saber qué versión usar, he hecho lo siguiente, tras buscar la imagen he escojido en la seccion "Supported tags and respective Dockerfile links" o en la seccion tags 
+
+![imagen](./img/s1.png)
+![imagen](./img/s2.png)
+
 También necesitamos poner qué puertos escucha para mantener su conexion con el host el cual serán los puertos  3306:3306, el puerto de la derecha es la que escucha el contenedor es el puerto de la izquierda la del host, para escribirlo nuestro de nuestro archivo necesitaremos escribir la instruccion  
 
 ```
@@ -301,19 +328,36 @@ networks:
   frontend-network:
 ```
 
+Si buscamos en internet el nombre de nuestro dominio podremos ver prestashop desplegado donde tendremos que registrarnos 
 
-
-
-
-
-
-
+![imagen](./img/prestaImagen.png)
 
 ## Ejercicio Workpress
 
-En este ejercicio haremos uso de los servicios mysql, phpadmin, http y wordpress que iran bajo la palabra service, bayamos primero con mysql  
+En este ejercicio haremos uso de los servicios mysql, phpadmin, http y wordpress para el despliegue de un wordpress  
 
-## Mysql
+Además uso dos arvhos: 
+- El archivo yml
+- El archivo .env
+
+En el archivo env se encuentran las variables de entorno que usaré en este ejercicio  
+
+Estas variables serán usadas para:
+- La contraseña root de la base de datos
+- El nombre de la base de datos
+- El nombre de usuario de la base de datos
+- La contraseña del usuario de la base de datos
+- El dominio del sitio web
+
+```
+WORDPRESS_DB_HOST=mariadb
+WORDPRESS_DB_USER=admin
+WORDPRESS_DB_PASSWORD=admin
+WORDPRESS_DB_NAME=wordpressdb
+DOMAIN=practicadocker.zapto.org
+```
+
+### Mysql
 La configuracion para mysql será el siguiente  
 
 ```
@@ -335,7 +379,7 @@ La configuracion para mysql será el siguiente
 
 donde  image: mysql:9.0 es la version de la imagen mysql, la version que se usará es la version 9.0, en  ports: - 3306:3306 especificamos el puerto que va a usar, en este caso el 3306:3306, en environment: le pasamos las variables de entorno donde le pasaremos la contraseña root, el nombre de base de datos, el usuario y la contraseña, para pasarle las variables de entorno en un archivo .env suaremos como siempre el simbolo del dolar y el nombre de la variable. Despues bienen los volumenes, que es donde se almacenaran de forma permanente los datos, tras esto en networks: que es la red con la que se conectará, esn esta vez se conectará en el backend, por ultimo nos encontramos con restart always, que indica que mmysql siempre se reiniciará automaticamente
 
-## phpmyadmin
+### phpmyadmin
 El codigo de php es el siguiente  
 
 ```
@@ -354,7 +398,7 @@ El codigo de php es el siguiente
 ```
 Usaremos la version 5.2.1 de la imagen, los puertos que usara será el 8080:80 las  variabñles de entorno environment: - PMA_ARBITRARY=1, las redes con las que se conectaran será tanto el frontend como el backend y rse reiniciara automaticamente siempre, ademas en depends_on: - mysql le estamos diciendo que php depende de que el servicio mysql para que funcione
 
-## wordpress
+### wordpress
 Configuracion de wordpress  
 
 ```
@@ -457,7 +501,7 @@ Una vez hecho buscamos en nuestro buscador nuestra ip sin https, entonces nos en
 
 ![imagen](./img/word.png)
 
-## http
+### http portal
 Ahora configuraremos el servicio http, lo haremos de la siguiente manera  
 Primero quitaremos el puerto en el servicio wordpress y despues añadiremos lo siguiente en el servicio http  
 
