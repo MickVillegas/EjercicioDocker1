@@ -350,10 +350,10 @@ Estas variables serán usadas para:
 - El dominio del sitio web
 
 ```
-WORDPRESS_DB_HOST=mariadb
-WORDPRESS_DB_USER=admin
-WORDPRESS_DB_PASSWORD=admin
-WORDPRESS_DB_NAME=wordpressdb
+MYSQL_ROOT_PASSWORD=msqlpass
+MYSQL_DATABASE=mysqldatabase
+MYSQL_USER=promontorio
+MYSQL_PASSWORD=ayermecomiunostallarinesconsalchichasytomatequericasestaban
 DOMAIN=practicadocker.zapto.org
 ```
 
